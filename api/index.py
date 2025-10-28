@@ -14,16 +14,42 @@ CORS(app)
 # Load and prepare data
 def load_books_data():
     try:
-        # Read CSV file - look in parent directory
-        csv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'indo_books.csv')
-        df = pd.read_csv(csv_path, encoding='utf-8')
+        # Try multiple possible paths for CSV file
+        possible_paths = [
+            os.path.join(os.path.dirname(__file__), 'indo_books.csv'),  # Same directory as this file (BEST for Vercel)
+            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'indo_books.csv'),  # Parent directory (local dev)
+            'indo_books.csv',  # Current working directory
+        ]
         
-        # Clean column names (remove BOM if present)
-        df.columns = df.columns.str.replace('æ', '').str.strip()
+        df = None
+        csv_path = None
         
-        return df
+        for path in possible_paths:
+            if os.path.exists(path):
+                csv_path = path
+                break
+        
+        if csv_path:
+            df = pd.read_csv(csv_path, encoding='utf-8')
+            # Clean column names (remove BOM if present)
+            df.columns = df.columns.str.replace('æ', '').str.strip()
+            print(f"Successfully loaded data from: {csv_path}")
+            return df
+        else:
+            print("ERROR: Could not find indo_books.csv in any location")
+            print(f"Current directory: {os.getcwd()}")
+            print(f"__file__ location: {__file__}")
+            try:
+                print(f"Files in current dir: {os.listdir('.')}")
+                print(f"Files in __file__ dir: {os.listdir(os.path.dirname(__file__))}")
+            except:
+                pass
+            return None
+            
     except Exception as e:
         print(f"Error loading data: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 # Initialize data
