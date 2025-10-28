@@ -175,8 +175,7 @@ def get_random_books():
         return jsonify({"error": str(e)}), 500
 
 # For Vercel deployment
-def handler(request):
-    return app(request)
+app = app  # Vercel looks for 'app' variable
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
