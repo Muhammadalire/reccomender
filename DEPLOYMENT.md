@@ -1,5 +1,14 @@
 # 🚀 Vercel Deployment Guide
 
+## ⚠️ Important: Deployment Size Optimized
+
+This project has been optimized to work within Vercel's 250MB serverless function limit by:
+- Removing heavy ML libraries (scikit-learn, numpy)
+- Using a lightweight text-based recommendation algorithm
+- Still providing accurate and fast book recommendations!
+
+See [`VERCEL_FIX.md`](VERCEL_FIX.md) for technical details.
+
 ## Quick Deployment Steps
 
 ### Option 1: Deploy via Vercel Dashboard (Recommended)
