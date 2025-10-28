@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import pandas as pd
-import os
+import random
 from dotenv import load_dotenv
-from simple_recommender import get_recommendations, get_genre_recommendations, get_top_rated
+from data_loader import load_books_csv, get_rating, filter_by_genre, search_books, get_all_genres
+from simple_recommender import get_recommendations_simple
 
 # Load environment variables
 load_dotenv()
@@ -11,125 +11,70 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-# Load and prepare data
-def load_books_data():
-    try:
-        # Try multiple possible paths for CSV file
-        possible_paths = [
-            os.path.join(os.path.dirname(__file__), 'indo_books.csv'),  # Same directory as this file (BEST for Vercel)
-            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'indo_books.csv'),  # Parent directory (local dev)
-            'indo_books.csv',  # Current working directory
-        ]
-        
-        df = None
-        csv_path = None
-        
-        for path in possible_paths:
-            if os.path.exists(path):
-                csv_path = path
-                break
-        
-        if csv_path:
-            df = pd.read_csv(csv_path, encoding='utf-8')
-            # Clean column names (remove BOM if present)
-            df.columns = df.columns.str.replace('æ', '').str.strip()
-            print(f"Successfully loaded data from: {csv_path}")
-            return df
-        else:
-            print("ERROR: Could not find indo_books.csv in any location")
-            print(f"Current directory: {os.getcwd()}")
-            print(f"__file__ location: {__file__}")
-            try:
-                print(f"Files in current dir: {os.listdir('.')}")
-                print(f"Files in __file__ dir: {os.listdir(os.path.dirname(__file__))}")
-            except:
-                pass
-            return None
-            
-    except Exception as e:
-        print(f"Error loading data: {e}")
-        import traceback
-        traceback.print_exc()
-        return None
-
-# Initialize data
-books_df = load_books_data()
+# Load books data (using CSV module, not pandas)
+books_data = load_books_csv()
 
 @app.route('/')
 def home():
     return jsonify({
-        "message": "Book Recommender API - Lightweight Version",
+        "message": "Book Recommender API - Ultra Lightweight",
         "status": "running",
+        "books_loaded": len(books_data),
         "endpoints": {
             "/api/books": "GET - Get all books",
             "/api/recommend": "POST - Get recommendations",
             "/api/genres": "GET - Get all genres",
-            "/api/search": "GET - Search books"
+            "/api/search": "GET - Search books",
+            "/api/random": "GET - Random books"
         }
     })
 
 @app.route('/api/books', methods=['GET'])
 def get_books():
     """Get all books"""
-    if books_df is None:
-        return jsonify({"error": "Data not loaded"}), 500
+    if not books_data:
+        return jsonify({"error": "No books loaded"}), 500
     
-    try:
-        books_list = books_df.to_dict('records')
-        return jsonify({
-            "success": True,
-            "count": len(books_list),
-            "books": books_list
-        })
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    return jsonify({
+        "success": True,
+        "count": len(books_data),
+        "books": books_data
+    })
 
 @app.route('/api/genres', methods=['GET'])
 def get_genres():
     """Get all unique genres"""
-    if books_df is None:
-        return jsonify({"error": "Data not loaded"}), 500
+    if not books_data:
+        return jsonify({"error": "No books loaded"}), 500
     
     try:
-        # Extract all genres (handling multiple genres per book)
-        all_genres = set()
-        for genre in books_df['Genre'].dropna():
-            genres = [g.strip() for g in str(genre).split('/')]
-            all_genres.update(genres)
-        
+        genres = get_all_genres(books_data)
         return jsonify({
             "success": True,
-            "genres": sorted(list(all_genres))
+            "genres": genres
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/search', methods=['GET'])
-def search_books():
+def search():
     """Search books by title, author, or genre"""
-    if books_df is None:
-        return jsonify({"error": "Data not loaded"}), 500
+    if not books_data:
+        return jsonify({"error": "No books loaded"}), 500
     
     query = request.args.get('q', '').lower()
     genre = request.args.get('genre', '')
     
     try:
-        filtered_df = books_df.copy()
+        results = books_data[:]
         
         # Filter by genre if specified
         if genre:
-            filtered_df = filtered_df[filtered_df['Genre'].str.contains(genre, case=False, na=False)]
+            results = filter_by_genre(results, genre)
         
         # Filter by search query
         if query:
-            mask = (
-                filtered_df['Judul (Title)'].str.lower().str.contains(query, na=False) |
-                filtered_df['Penulis (Author)'].str.lower().str.contains(query, na=False) |
-                filtered_df['Genre'].str.lower().str.contains(query, na=False)
-            )
-            filtered_df = filtered_df[mask]
-        
-        results = filtered_df.to_dict('records')
+            results = search_books(results, query)
         
         return jsonify({
             "success": True,
@@ -140,37 +85,40 @@ def search_books():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/recommend', methods=['POST'])
-def recommend_books():
-    """Get book recommendations based on a book title or preferences"""
-    if books_df is None:
-        return jsonify({"error": "Data not loaded"}), 500
+def recommend():
+    """Get book recommendations"""
+    if not books_data:
+        return jsonify({"error": "No books loaded"}), 500
     
-    data = request.json
+    data = request.json or {}
     book_title = data.get('title', '')
     genre_preference = data.get('genre', '')
-    num_recommendations = min(int(data.get('count', 5)), 20)
+    count = min(int(data.get('count', 5)), 20)
     
     try:
         recommendations = []
         
         if book_title:
             # Use simple recommender
-            recommendations = get_recommendations(books_df, book_title, num_recommendations)
+            recommendations = get_recommendations_simple(books_data, book_title, count)
             
             if not recommendations:
-                # If no match found, return top rated books in genre
+                # Fallback to top rated
                 if genre_preference:
-                    recommendations = get_genre_recommendations(books_df, genre_preference, num_recommendations)
+                    recommendations = filter_by_genre(books_data, genre_preference)
                 else:
-                    recommendations = get_top_rated(books_df, num_recommendations)
+                    recommendations = books_data[:]
+                
+                recommendations = sorted(recommendations, key=get_rating, reverse=True)[:count]
         
         elif genre_preference:
-            # Recommend top books from genre
-            recommendations = get_genre_recommendations(books_df, genre_preference, num_recommendations)
+            # Top books from genre
+            genre_books = filter_by_genre(books_data, genre_preference)
+            recommendations = sorted(genre_books, key=get_rating, reverse=True)[:count]
         
         else:
-            # Return top rated books
-            recommendations = get_top_rated(books_df, num_recommendations)
+            # Top rated books
+            recommendations = sorted(books_data, key=get_rating, reverse=True)[:count]
         
         return jsonify({
             "success": True,
@@ -180,18 +128,21 @@ def recommend_books():
         })
     
     except Exception as e:
+        print(f"Error in recommend: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 @app.route('/api/random', methods=['GET'])
-def get_random_books():
+def get_random():
     """Get random books"""
-    if books_df is None:
-        return jsonify({"error": "Data not loaded"}), 500
+    if not books_data:
+        return jsonify({"error": "No books loaded"}), 500
     
     count = min(int(request.args.get('count', 5)), 20)
     
     try:
-        random_books = books_df.sample(n=count).to_dict('records')
+        random_books = random.sample(books_data, min(count, len(books_data)))
         return jsonify({
             "success": True,
             "count": len(random_books),
@@ -200,8 +151,8 @@ def get_random_books():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# For Vercel deployment
-app = app  # Vercel looks for 'app' variable
+# Vercel entry point
+app = app
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

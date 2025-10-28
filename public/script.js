@@ -97,7 +97,7 @@ async function getRecommendations() {
     const bookTitle = document.getElementById('favoriteBook').value.trim();
     
     if (!bookTitle) {
-        showMessage('Please enter a book title', 'info');
+        showMessage('Enter a book title', 'info');
         return;
     }
     

@@ -1,10 +1,9 @@
 """
-Lightweight recommendation engine without scikit-learn
+Lightweight recommendation engine without pandas
 Uses simple text matching and genre-based filtering
 """
-import pandas as pd
-from collections import Counter
 import re
+from collections import Counter
 
 
 def simple_similarity(text1, text2):
@@ -23,54 +22,45 @@ def simple_similarity(text1, text2):
     return intersection / union if union > 0 else 0.0
 
 
-def get_recommendations(books_df, book_title, num_recommendations=5):
-    """Get book recommendations using simple similarity"""
+def get_recommendations_simple(books, book_title, num_recommendations=5):
+    """Get book recommendations using simple similarity - works with dict list"""
     # Find the book
-    book_idx = books_df[books_df['Judul (Title)'].str.lower() == book_title.lower()].index
+    target_book = None
+    for book in books:
+        if book.get('Judul (Title)', '').lower() == book_title.lower():
+            target_book = book
+            break
     
-    if len(book_idx) == 0:
+    if not target_book:
         # Try partial match
-        book_idx = books_df[books_df['Judul (Title)'].str.lower().str.contains(book_title.lower(), na=False)].index
+        for book in books:
+            if book_title.lower() in book.get('Judul (Title)', '').lower():
+                target_book = book
+                break
     
-    if len(book_idx) == 0:
+    if not target_book:
         return []
     
-    book_idx = book_idx[0]
-    target_book = books_df.iloc[book_idx]
-    
     # Create feature text for target book
-    target_text = f"{target_book['Genre']} {target_book['Summary']} {target_book['Penulis (Author)']}"
+    target_text = f"{target_book.get('Genre', '')} {target_book.get('Summary', '')} {target_book.get('Penulis (Author)', '')}"
     
     # Calculate similarities
     similarities = []
-    for idx, row in books_df.iterrows():
-        if idx == book_idx:
+    for book in books:
+        if book == target_book:
             continue
         
-        book_text = f"{row['Genre']} {row['Summary']} {row['Penulis (Author)']}"
+        book_text = f"{book.get('Genre', '')} {book.get('Summary', '')} {book.get('Penulis (Author)', '')}"
         similarity = simple_similarity(target_text, book_text)
         
         # Boost score if same genre
-        if target_book['Genre'] == row['Genre']:
+        if target_book.get('Genre', '') == book.get('Genre', ''):
             similarity += 0.3
         
-        similarities.append((idx, similarity))
+        similarities.append((book, similarity))
     
     # Sort by similarity
     similarities.sort(key=lambda x: x[1], reverse=True)
     
     # Get top recommendations
-    top_indices = [idx for idx, _ in similarities[:num_recommendations]]
-    
-    return books_df.iloc[top_indices].to_dict('records')
-
-
-def get_genre_recommendations(books_df, genre, num_recommendations=5):
-    """Get top-rated books from a genre"""
-    genre_books = books_df[books_df['Genre'].str.contains(genre, case=False, na=False)]
-    return genre_books.nlargest(num_recommendations, 'Rating (dari 5)').to_dict('records')
-
-
-def get_top_rated(books_df, num_recommendations=5):
-    """Get top-rated books overall"""
-    return books_df.nlargest(num_recommendations, 'Rating (dari 5)').to_dict('records')
+    return [book for book, _ in similarities[:num_recommendations]]

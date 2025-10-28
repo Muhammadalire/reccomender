@@ -40,3 +40,16 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Deployment docs (keep only README)
+CHECKLIST.md
+CSV_FIX.md
+DEPLOY_FIX.md
+DEPLOY_NOW.md
+DEV.md
+GIFT_MESSAGE.md
+PROJECT_SUMMARY.md
+QUICKSTART.md
+SCREENSHOTS.md
+VERCEL_FIX.md
+*.sh
