@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Magical Book Finder ✨</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Pacifico&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Floating sparkles -->
+    <div class="sparkles" id="sparkles"></div>
+    
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1 class="main-title">
+                <span class="sparkle">✨</span>
+                Magical Book Finder
+                <span class="sparkle">✨</span>
+            </h1>
+            <p class="subtitle">Discover your next enchanting read</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Search Section -->
+        <section class="search-section">
+            <div class="search-card">
+                <h2 class="section-title">
+                    <span class="icon">🔍</span>
+                    Find Your Perfect Book
+                </h2>
+                
+                <div class="search-container">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        class="search-input" 
+                        placeholder="Search by title, author, or genre..."
+                    >
+                    <button id="searchBtn" class="btn btn-primary">Search</button>
+                </div>
+
+                <div class="genre-filter">
+                    <label class="filter-label">Filter by Genre:</label>
+                    <select id="genreSelect" class="genre-select">
+                        <option value="">All Genres</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Recommendation Section -->
+        <section class="recommendation-section">
+            <div class="recommendation-card">
+                <h2 class="section-title">
+                    <span class="icon">💝</span>
+                    Get Personalized Recommendations
+                </h2>
+                
+                <div class="recommendation-controls">
+                    <input 
+                        type="text" 
+                        id="favoriteBook" 
+                        class="search-input" 
+                        placeholder="Enter a book you love..."
+                    >
+                    <button id="recommendBtn" class="btn btn-secondary">Get Recommendations</button>
+                </div>
+
+                <div class="quick-buttons">
+                    <button class="btn btn-small" onclick="getRandomBooks()">
+                        🎲 Surprise Me
+                    </button>
+                    <button class="btn btn-small" onclick="getTopRated()">
+                        ⭐ Top Rated
+                    </button>
+                    <button class="btn btn-small" onclick="getRomanceBooks()">
+                        💕 Romance
+                    </button>
+                    <button class="btn btn-small" onclick="getFantasyBooks()">
+                        🧚 Fantasy
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section" id="resultsSection" style="display: none;">
+            <h2 class="section-title" id="resultsTitle">
+                <span class="icon">📚</span>
+                Results
+            </h2>
+            <div id="bookResults" class="book-grid"></div>
+        </section>
+
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="loading-spinner" style="display: none;">
+            <div class="spinner"></div>
+            <p>Finding magical books...</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Made with 💖 for someone special</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
