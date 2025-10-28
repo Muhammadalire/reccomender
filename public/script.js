@@ -1,7 +1,12 @@
 // API Configuration - auto-detects environment
-const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:5001' 
-    : '';  // Use relative path in production
+// For local backend with ngrok, set CUSTOM_API_URL in localStorage:
+// localStorage.setItem('CUSTOM_API_URL', 'https://your-ngrok-url.ngrok.io')
+const CUSTOM_API = localStorage.getItem('CUSTOM_API_URL');
+const API_BASE_URL = CUSTOM_API || (
+    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:5001' 
+        : ''  // Use relative path in production
+);
 
 // Create sparkles effect
 function createSparkles() {
