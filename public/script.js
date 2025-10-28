@@ -1,7 +1,7 @@
-// API Configuration
-const API_BASE_URL = window.location.hostname === 'localhost' 
+// API Configuration - auto-detects environment
+const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:5001' 
-    : '';
+    : '';  // Use relative path in production
 
 // Create sparkles effect
 function createSparkles() {

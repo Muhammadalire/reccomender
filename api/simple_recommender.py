@@ -24,6 +24,10 @@ def simple_similarity(text1, text2):
 
 def get_recommendations_simple(books, book_title, num_recommendations=5):
     """Get book recommendations using simple similarity - works with dict list"""
+    # Validate inputs
+    if not books or not book_title:
+        return []
+    
     # Find the book
     target_book = None
     for book in books:

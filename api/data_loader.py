@@ -64,10 +64,13 @@ def load_books_csv():
 
 
 def get_rating(book):
-    """Get rating as float"""
+    """Get rating as float - safe version"""
     try:
-        return float(book.get('Rating (dari 5)', 0))
-    except:
+        rating_str = book.get('Rating (dari 5)', '0')
+        if isinstance(rating_str, (int, float)):
+            return float(rating_str)
+        return float(str(rating_str).replace(',', '.'))
+    except (ValueError, AttributeError, TypeError):
         return 0.0
 
 
@@ -89,10 +92,16 @@ def search_books(books, query):
 
 
 def get_all_genres(books):
-    """Get all unique genres"""
+    """Get all unique genres - safe version"""
+    if not books:
+        return []
+    
     genres = set()
     for book in books:
         genre_str = book.get('Genre', '')
-        for g in genre_str.split('/'):
-            genres.add(g.strip())
+        if genre_str:
+            for g in str(genre_str).split('/'):
+                cleaned = g.strip()
+                if cleaned:
+                    genres.add(cleaned)
     return sorted(list(genres))

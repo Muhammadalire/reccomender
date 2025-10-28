@@ -1,19 +1,28 @@
 from flask import Flask, request, jsonify
-from flask import Flask, request, jsonify
 from flask_cors import CORS
 import random
+import os
 from dotenv import load_dotenv
 from data_loader import load_books_csv, get_rating, filter_by_genre, search_books, get_all_genres
 from simple_recommender import get_recommendations_simple
 
 # Load environment variables
-load_dotenv()
+if os.path.exists('.env'):
+    load_dotenv()
+else:
+    print("Warning: .env file not found, using defaults")
 
 app = Flask(__name__)
 CORS(app)
 
 # Load books data (using CSV module, not pandas)
 books_data = load_books_csv()
+
+# Validate data loaded
+if not books_data:
+    print("CRITICAL ERROR: No books loaded! Check CSV file.")
+    # Create a fallback empty response
+    books_data = []
 
 @app.route('/')
 def home():
