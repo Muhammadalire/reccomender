@@ -17,12 +17,24 @@ def load_books_csv():
         
         csv_path = None
         for path in possible_paths:
+            print(f"Trying path: {path}")
             if os.path.exists(path):
                 csv_path = path
+                print(f"Found CSV at: {path}")
                 break
         
         if not csv_path:
             print("ERROR: Could not find indo_books.csv")
+            print(f"Current directory: {os.getcwd()}")
+            print(f"__file__: {__file__}")
+            print(f"dirname(__file__): {os.path.dirname(__file__)}")
+            try:
+                print(f"Files in current dir: {os.listdir('.')}")
+                api_dir = os.path.dirname(__file__)
+                if os.path.exists(api_dir):
+                    print(f"Files in {api_dir}: {os.listdir(api_dir)}")
+            except Exception as e:
+                print(f"Could not list files: {e}")
             return []
         
         books = []

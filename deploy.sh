@@ -8,6 +8,17 @@ echo "  - CSV included in serverless bundle"
 echo "  - Only 3 dependencies"
 echo ""
 
+# Verify CSV file exists
+if [ ! -f "api/indo_books.csv" ]; then
+    echo "❌ ERROR: api/indo_books.csv not found!"
+    echo "Copying from root..."
+    cp indo_books.csv api/indo_books.csv
+fi
+
+echo "📋 Files in api/ directory:"
+ls -lh api/
+echo ""
+
 # Check if git is initialized
 if [ ! -d .git ]; then
     echo "❌ Error: Not a git repository"
