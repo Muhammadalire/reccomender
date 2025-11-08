@@ -8,28 +8,13 @@ import os
 def load_books_csv():
     """Load books from CSV file without pandas"""
     try:
-        # Try multiple possible paths
-        possible_paths = [
-            os.path.join(os.path.dirname(__file__), 'indo_books.csv'),
-            os.path.join(os.path.dirname(os.path.dirname(__file__)), 'indo_books.csv'),
-            'indo_books.csv',
-        ]
+        # Construct path relative to this script
+        csv_path = os.path.join(os.path.dirname(__file__), 'indo_books.csv')
         
-        csv_path = None
-        for path in possible_paths:
-            print(f"Trying path: {path}")
-            if os.path.exists(path):
-                csv_path = path
-                print(f"Found CSV at: {path}")
-                break
-        
-        if not csv_path:
-            print("ERROR: Could not find indo_books.csv")
+        if not os.path.exists(csv_path):
+            print(f"ERROR: Could not find indo_books.csv at {csv_path}")
             print(f"Current directory: {os.getcwd()}")
-            print(f"__file__: {__file__}")
-            print(f"dirname(__file__): {os.path.dirname(__file__)}")
             try:
-                print(f"Files in current dir: {os.listdir('.')}")
                 api_dir = os.path.dirname(__file__)
                 if os.path.exists(api_dir):
                     print(f"Files in {api_dir}: {os.listdir(api_dir)}")
