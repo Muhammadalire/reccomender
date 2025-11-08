@@ -13,7 +13,7 @@ else:
     print("Warning: .env file not found, using defaults")
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # Load books data (using CSV module, not pandas)
 books_data = load_books_csv()
